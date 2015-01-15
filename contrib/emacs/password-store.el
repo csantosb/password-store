@@ -157,11 +157,18 @@ need to be commited manually if git is being used."
   (find-file (password-store--entry-to-file entry)))
 
 ;;;###autoload
-(defun password-store-get (entry)
-  "Return password for ENTRY.
+(defun password-store-get (entry &optional item)
+  "Return field content of ITEM in ENTRY.
 
-Returns the first line of the password data."
-  (car (s-lines (password-store--run-show entry))))
+When no ITEM is provided, returns the first line of ENTRY."
+  (if item
+      (let ((contents (s-lines (password-store--run-show entry))))
+	(catch 'loop
+	  (while contents
+	    (when (string-prefix-p item (car contents))
+	      (throw 'loop (s-trim-left (nth 1 (s-split item (car contents))))))
+	    (setq contents (cdr contents)))))
+    (car (s-lines (password-store--run-show entry)))))
 
 ;;;###autoload
 (defun password-store-clear ()
